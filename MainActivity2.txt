@@ -1,0 +1,198 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date:    22:38:56 03/18/2017 
+// Design Name: 
+// Module Name:    FPGA_IMPLEMENTATION 
+// Project Name: 
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module FPGA_IMPLEMENTATION(input clk);
+		 parameter WIDTH = 120; // Image width 
+		 parameter HEIGHT = 90; // Image height
+		 START_UP_DELAY = 100, //Delay during start up time 
+                 HSYNC_DELAY = 160, // Delay between  
+		 
+		 assign INFILE = "C:\Users\TEMP.DELL.001\Desktop\tushar.hex";  //image read
+		 wire reg[7:0] r[10799:0];
+		 input reg[7:0] a[10799:0];
+		 initial begin 										//Correction Required 
+			$readmemh(INFILE, reg [7:0] a[10799:0]);	// image store in the input register
+		 end
+		 
+		 		 
+			for(j=0;j<8;j=j+1)
+			begin
+				reg[j]r[0]=reg[j]a[0];     //residual image stored for the first column of the frame
+			end
+		 
+		 
+		 assign c=8'h0;
+							//residual pixals for all the rows and column except first column of the fra
+		  for(j=1;j<10800;j=j+1)
+		  begin
+			for(k=0;k<8;k=k+1)
+				begin
+					reg[k]r[j]=reg[k]a[j]xor reg[k]a[j-1]xor c
+					c=~reg[k]a[j]*reg[k]a[j-1]+~reg[k]a[j]*c+reg[k]a[j-1]*c+~reg[k]a[j]*c
+				end
+			end
+			 
+		wire reg[7:0] output_1[10799:0];
+		wire reg[7:0] qx[10799:0];
+		 
+		for(j=0;j<10800;j=j+1)
+			begin
+				for(k=0;k<8;k=k+1)
+				begin
+					always@(reg[k] output_1[j] or clk)
+					begin
+						if(clk)
+							reg[k] output_1[j] <= reg[k]qx[j];
+					end
+				end
+			end
+		 
+
+			wire reg[7:0] output_2[10799:0];
+			
+			for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+						assign reg[k] output_2[j]=reg[k]output_1[j] xor reg[k]qx[j];
+					end
+				end
+			
+			
+			wire reg[7:0] mux_input0[10799:0];
+			wire reg[7:0] mux_input1[10799:0];
+			wire reg[7:0] output_3[10799:0];
+			wire reg[1:0] mux_input;
+			
+			for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+					assign constant = 8'h1.125;
+					assign reg[k] mux_input1[j] = constant*reg[k] mux_output_4[j];
+					assign reg[1] mux_input = reg[k] mux_input2[j];
+					assign reg[0] mux_input = reg[k] mux_input1[j];
+					assign reg[k] output_3[j] = reg[reg [k] output_2[j]] mux_input;
+					end
+				end
+			
+			wire reg[7:0] mux_output_4[10799:0];
+			wire reg[7:0] mux_output_5[10799:0]; 
+			
+			always @(posedge clk)
+						
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+					assign reg[k] mux_output_4[j] = reg [k] output_3[j];
+					
+					end
+				end
+			
+			
+
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+					assign reg[k] mux_output_5[j] = ~reg[7:0] mux_output_4[10799:0];
+					assign reg[k] mux_input2[j] = reg[k] mux_output_4[j];
+					end
+				end
+			
+			wire reg[7:0] output_6[10799:0];
+
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+					assign reg[1] mux_input = reg[k] mux_output_5[j];
+					assign reg[0] mux_input = reg[k] mux_output_4[j];
+					assign reg[k] output_3[j] = reg[reg [k] output_1[j]] mux_input;
+					end
+				end
+			end
+			
+			wire reg[7:0] output_alu[10799:0];
+			wire reg[7:0] input_comp_0[10799:0];
+			wire reg[7:0] alu_clock[10799:0];
+			
+
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+						always @(posedge alu_clock)
+							assign reg[k] output_alu[j] = reg[k] output_5[j] + reg[k] input_comp_0[j];
+					end
+				end		
+			end
+			
+			
+			always @(posedge clk)
+
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+					assign reg[k] output_alu[j] = reg [k] input_comp_0[j];
+					end
+				end
+			
+			
+
+				for(j=0;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin 
+						if(reg[k] input_comp_0[j] > reg[k] r[j])
+							assign reg[k] output_1[j] = reg[k] r[j];
+						else
+							assign reg[k] output_1[j] = reg[k] input_comp_0[j];
+					end
+				end
+			
+			
+			output reg[7:0] output_final[10799:0];
+			
+
+				for(k=0;k<8;k=k+1)
+				begin
+					assign reg[k] output_final[0] = reg[k] output_1[0];
+				end
+			
+
+				for(j=1;j<10800;j=j+1)
+				begin
+					for(k=0;k<8;k=k+1)
+					begin
+						assign reg[k] output_final[j] = reg[k] output_1[j] + reg[k] output_1[j-1];
+					end
+				end
+		
+			
+			
+			
+		endmodule
+		 
+
+
+
